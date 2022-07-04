@@ -244,7 +244,7 @@ class PlotPanelStairs(wx.Panel):
         self.multiplier       = [1     for i in range(naxes)]
         self.ref_locations    = 0,1
 
-        self.vertical_scale   = [1.0 for i in range(naxes)]
+        self.vertical_scale   = [[1.0,-1.0] for i in range(naxes)]
         self.dataymax         = [1.0 for i in range(naxes)]
         self.data_type        = ['real' for i in range(naxes)]
         self.data_type_summed = [self.prefs.data_type_summed for i in range(naxes)]
@@ -385,18 +385,13 @@ class PlotPanelStairs(wx.Panel):
             ymax = [max(ymax) for item in ymax]
 
         self.dataymax = ymax
-        self.vertical_scale = ymax
+        self.vertical_scale = [[item,-item] for item in ymax]
 
         for i, axes in enumerate(self.all_axes):
 
             # ensure bounds are correct on start
             axes.ignore_existing_data_limits = True
-            if self.prefs.zero_line_plot_top:
-                axes.update_datalim([[xmin[i],-self.dataymax[i]],[xmax[i],self.dataymax[i]*0.1]])
-            elif self.prefs.zero_line_plot_middle:
-                axes.update_datalim([[xmin[i],-self.dataymax[i]],[xmax[i],self.dataymax[i]]])
-            elif self.prefs.zero_line_plot_bottom:
-                axes.update_datalim([[xmin[i],-self.dataymax[i]*0.1],[xmax[i],self.dataymax[i]]])
+            axes.update_datalim([[xmin[i],-self.dataymax[i]],[xmax[i],self.dataymax[i]]])
 
             x0, y0, x1, y1 = axes.dataLim.bounds
             xdel = self.xscale_bump*(x1-x0)
@@ -476,7 +471,9 @@ class PlotPanelStairs(wx.Panel):
             if axis == event.inaxes:
                 iaxis = i
 
-        self.on_scroll(event.button, event.step, iaxis)
+        print('key = '+str(event.key))
+
+        self.on_scroll(event.button, event.step, iaxis, event.key, event.ydata)
 
 
     def _default_data(self):
@@ -709,9 +706,6 @@ class PlotPanelStairs(wx.Panel):
         """
         x0, y0, x1, y1 = self.all_axes[0].dataLim.bounds
 
-        ymax = self.vertical_scale
-        ymin = [-1* item for item in ymax]
-
         bot = 0.075 if self.prefs.xaxis_show else 0.0
         top = 0.95 if self.prefs.title_show else 1.0
         self.figure.subplots_adjust(left=0.0, right=0.999,
@@ -741,29 +735,18 @@ class PlotPanelStairs(wx.Panel):
 
             # set zero line at top/middle/bottom of plot
             axes.ignore_existing_data_limits = True
-            if self.prefs.zero_line_plot_top:
-                axes.update_datalim([[x0,-self.dataymax[j]],[x0+x1,self.dataymax[j]*0.1]])
-            elif self.prefs.zero_line_plot_middle:
-                axes.update_datalim([[x0,-self.dataymax[j]],[x0+x1,self.dataymax[j]]])
-            elif self.prefs.zero_line_plot_bottom:
-                axes.update_datalim([[x0,-self.dataymax[j]*0.1],[x0+x1,self.dataymax[j]]])
+            axes.update_datalim([[x0,-self.dataymax[j]],[x0+x1,self.dataymax[j]]])
 
 
-    def set_ylim(self):
+    def set_ylim(self, key=None, ydata=None):
         """
         Refresh axes ylim values based on plot_option zero_line_location
         setting
 
         """
-        if self.prefs.zero_line_plot_bottom:
-            ymax =  self.vertical_scale
-            ymin = [-0.1*item for item in ymax]
-        elif self.prefs.zero_line_plot_middle:
-            ymax =  self.vertical_scale
-            ymin = [-1.0*item for item in ymax]
-        elif self.prefs.zero_line_plot_top:
-            ymin = [-1.0*item for item in self.vertical_scale]
-            ymax = [-0.1*item for item in ymin]
+        ymax = [item[0] for item in self.vertical_scale]
+        ymin = [item[1] for item in self.vertical_scale]
+
         for i, axes in enumerate(self.all_axes):
             ylim = (ymin[i], ymax[i])
             if ymax == ymin:
@@ -793,7 +776,7 @@ class PlotPanelStairs(wx.Panel):
             self.data_type_summed = [not item for item in self.data_type_summed]
 
 
-    def set_vertical_scale(self, step, scale_mult=1.25):
+    def set_vertical_scale(self, step, scale_mult=1.25, iaxis=None, key='', ydata=None):
         '''
         Vertical scale events are typically controlled by the scroll event
         that return +/- values for step depending on roll being up or
@@ -814,10 +797,38 @@ class PlotPanelStairs(wx.Panel):
         step = step/3
         if step < 1: step = 1
 
-        if shrink:
-            self.vertical_scale = [item*scale_mult*step for item in self.vertical_scale]
+        if key == 'shift' and iaxis is not None:
+            if iaxis < len(self.all_axes):
+
+                delta = self.vertical_scale[iaxis][0]-ydata
+                ctr = ydata
+                if shrink:
+                    delta_new = (delta/2.0)*scale_mult*step
+                else:
+                    delta_new = (delta/2.0)/(scale_mult*step)
+
+                self.vertical_scale[iaxis] = [ctr+delta_new, ctr-delta_new]
         else:
-            self.vertical_scale = [ item / (scale_mult * step) for item in self.vertical_scale]
+            if iaxis is None:
+                for i, item in enumerate(self.vertical_scale):
+                    delta = item[0]-item[1]
+                    ctr   = item[0]-(delta/2.0)
+                    if shrink:
+                        delta_new = (delta/2.0)*scale_mult*step
+                    else:
+                        delta_new = (delta/2.0)/(scale_mult*step)
+
+                    self.vertical_scale[i] = [ctr+delta_new, ctr-delta_new]
+            else:
+                if iaxis < len(self.all_axes):
+                    delta = self.vertical_scale[iaxis][0]-self.vertical_scale[iaxis][1]
+                    ctr = self.vertical_scale[iaxis][0]-(delta/2.0)
+                    if shrink:
+                        delta_new = (delta/2.0)*scale_mult*step
+                    else:
+                        delta_new = (delta/2.0)/(scale_mult*step)
+
+                    self.vertical_scale[iaxis] = [ctr+delta_new, ctr-delta_new]
 
         self.set_ylim()
         self.canvas.draw()
@@ -1031,9 +1042,9 @@ class PlotPanelStairs(wx.Panel):
         """ placeholder, overload for user defined event handling """
         self._dprint('on_move, xdata='+str(xdata)+'  ydata='+str(ydata)+'  val='+str(value)+'  bounds = '+str(bounds)+'  iaxis='+str(iaxis))
 
-    def on_scroll(self, button, step, iaxis):
+    def on_scroll(self, button, step, iaxis, key, ydata):
         """ placeholder, overload for user defined event handling """
-        self._dprint('on_move, button='+str(button)+'  step='+str(step)+'  iaxis='+str(iaxis))
+        self._dprint('on_move, button='+str(button)+'  step='+str(step)+'  iaxis='+str(iaxis)+'  key='+str(key)+'  ydata='+str(ydata))
 
     def on_zoom_select(self, xmin, xmax, val, ymin, ymax, reset=False, iplot=None):
         """ placeholder, overload for user defined event handling """
@@ -2074,8 +2085,8 @@ class DemoPlotPanel(PlotPanelStairs):
         self.top.statusbar.SetStatusText(" Value = %f"%(value,), 2)
         self.top.statusbar.SetStatusText( " " , 1)
 
-    def on_scroll(self, button, step, iaxis):
-        self.set_vertical_scale(step)
+    def on_scroll(self, button, step, iaxis, key, ydata):
+        self.set_vertical_scale(step, iaxis=iaxis, key=key, ydata=ydata)
 
     def on_zoom_motion(self, xmin, xmax, val, ymin, ymax, iplot=None):
         delta  = xmax - xmin

@@ -18,7 +18,7 @@ import wx
 import numpy as np
 
 # Our modules
-import pyplotter_ge.util_config_pyplotter_ge as util_config_pyplotter_ge
+import pyplotter_ge.util_config_plotter_ge as util_config_pyplotter_ge
 
 
 

@@ -23,11 +23,11 @@ from wx.lib.embeddedimage import PyEmbeddedImage
 # Our modules
 import pyplotter_ge.common.misc as util_misc
 import pyplotter_ge.common.common_dialogs as common_dialogs
-import pyplotter_ge.util_config_pyplotter_ge as util_config_pyplotter_ge
+import pyplotter_ge.util_config_plotter_ge as util_config_pyplotter_ge
 import pyplotter_ge.auto_gui.pyplotter_ge as pyplotter_ge_gui
 
-from pyplotter_ge.plot_panel_pyplotter_ge import PlotPanelGePlotter
-from pyplotter_ge.util_pyplotter_ge import PlotterNode, PrefsGePlotter, util_create_menu_bar, is_intable
+from pyplotter_ge.plot_panel_plotter_ge import PlotPanelGePlotter
+from pyplotter_ge.util_plotter_ge import PlotterNode, PrefsGePlotter, util_create_menu_bar, is_intable
 
 
 
