@@ -205,13 +205,13 @@ class PyPlotterGeMain(pyplotter_ge_gui.PyPlotterGeFrame):
             self,
             self,
             naxes=self.nplots,
-            zoom='span',
+            zoom='box',             # vs 'span'
             reference=True,
             middle=True,
             # zoom_button=1,        # bjs - only in plot_panel_spectral for now?
             # middle_button=2,
             # refs_button=3,
-            unlink=False,
+            unlink=True,
             do_zoom_select_event=True,
             do_zoom_motion_event=True,
             do_middle_select_event=True,

@@ -45,7 +45,7 @@ class PlotPanelGePlotter(PlotPanelStairs):
         self.top.statusbar.SetStatusText( " Value = "+str(value), 2)
 
     
-    def on_scroll(self, button, step, iaxis, key, ydata):
+    def on_scroll(self, button, step, iaxis, key='', ydata=None):
         
         self.set_vertical_scale(step, iaxis=iaxis, key=key, ydata=ydata)
 
@@ -59,8 +59,8 @@ class PlotPanelGePlotter(PlotPanelStairs):
 
     def on_zoom_motion(self, xmin, xmax, val, ymin, ymax, iplot=None):
         
-        tstr  = xmin
-        tend  = xmax
+        tstr = xmin
+        tend = xmax
         if tstr > tend: tstr, tend = tend, tstr
         tdelta = tend - tstr  # keeps delta positive
         self.top.statusbar.SetStatusText( " Xvalue [int] = " , 0)
