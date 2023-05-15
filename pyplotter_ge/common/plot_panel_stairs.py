@@ -925,7 +925,8 @@ class PlotPanelStairs(wx.Panel):
         if flag35:
             gs = matplotlib.gridspec.GridSpec(n, 1)
             for i, ax in enumerate(self.figure.axes):
-                ax.set_subplotspec(gs.new_subplotspec((i, 0)))
+                ax.set_position(gs[i].get_position(self.figure))
+                ax.set_subplotspec(gs[i])
         else:
             for i, ax in enumerate(self.figure.axes):
                 ax.change_geometry(n, 1, i+1)
@@ -982,7 +983,8 @@ class PlotPanelStairs(wx.Panel):
         if flag35:
             gs = matplotlib.gridspec.GridSpec(n, 1)
             for i, ax in enumerate(self.figure.axes):
-                ax.set_subplotspec(gs.new_subplotspec((i, 0)))
+                ax.set_position(gs[i].get_position(self.figure))
+                ax.set_subplotspec(gs[i])
         else:
             for i, ax in enumerate(self.figure.axes):
                 ax.change_geometry(n, 1, i+1)
